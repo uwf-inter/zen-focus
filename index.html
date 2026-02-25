@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Focus | Deep Dark & Minimal Timer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono:wght@300;500&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #050505;
+            color: #F8FAFC;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .glow {
+            text-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-focus {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-focus:hover {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: #22C55E;
+            color: #22C55E;
+        }
+
+        .btn-active {
+            background: #22C55E !important;
+            color: #050505 !important;
+        }
+
+        /* Hide arrows in number input */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen">
+
+    <!-- Header / Branding -->
+    <div class="fixed top-8 left-0 w-full text-center opacity-30 tracking-widest text-xs uppercase font-light">
+        Zen Focus Mode
+    </div>
+
+    <!-- Test Sound Button (Fixed corner for ease of access) -->
+    <button onclick="playBellSound()"
+        class="fixed bottom-4 right-4 text-[10px] uppercase tracking-[0.2em] text-white/20 hover:text-[#22C55E] transition-colors border border-white/5 px-3 py-1 rounded z-50">
+        Test Sound
+    </button>
+
+    <!-- Main Timer Area -->
+    <div class="relative flex items-center justify-center w-[300px] h-[300px] sm:w-[450px] sm:h-[450px]">
+        <!-- Circular Progress Bar -->
+        <svg class="absolute w-full h-full" viewBox="0 0 100 100">
+            <circle class="text-white/5" stroke-width="1.5" stroke="currentColor" fill="transparent" r="48" cx="50"
+                cy="50" />
+            <circle id="progress-circle" class="progress-ring__circle text-[#22C55E]" stroke-width="1.5"
+                stroke-dasharray="301.59" stroke-dashoffset="301.59" stroke-linecap="round" stroke="currentColor"
+                fill="transparent" r="48" cx="50" cy="50" />
+        </svg>
+
+        <!-- Time Display -->
+        <div class="flex flex-col items-center justify-center z-10">
+            <div id="timer-display" class="text-7xl sm:text-9xl font-mono font-light tracking-tighter glow">
+                25:00
+            </div>
+            <div id="status-label" class="text-xs uppercase tracking-[0.4em] mt-2 text-white/40 font-light">
+                Ready
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="mt-12 space-y-8 flex flex-col items-center">
+
+        <!-- Preset Controls -->
+        <div class="glass px-6 py-4 rounded-full flex space-x-6 text-sm font-light">
+            <button onclick="setTimer(25)" class="preset-btn hover:text-[#22C55E] transition-colors">25m</button>
+            <span class="text-white/10">|</span>
+            <button onclick="setTimer(15)" class="preset-btn hover:text-[#22C55E] transition-colors">15m</button>
+            <span class="text-white/10">|</span>
+            <button onclick="setTimer(5)" class="preset-btn hover:text-[#22C55E] transition-colors">5m</button>
+            <span class="text-white/10">|</span>
+            <div class="flex items-center space-x-1">
+                <input type="number" id="custom-min" min="1" max="999" placeholder="..."
+                    class="bg-transparent w-8 text-center focus:outline-none border-b border-white/10 focus:border-[#22C55E] transition-colors">
+                <span class="text-white/40">m</span>
+            </div>
+        </div>
+
+        <!-- Main Actions -->
+        <div class="flex items-center space-x-8">
+            <button id="reset-btn"
+                class="glass w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors border border-white/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 opacity-60" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                </svg>
+            </button>
+
+            <button id="start-btn"
+                class="w-24 h-24 rounded-full bg-white text-[#050505] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                <span id="start-icon" class="font-bold tracking-tight">START</span>
+                <span id="pause-icon" class="hidden font-bold tracking-tight">PAUSE</span>
+            </button>
+
+            <div class="w-14 h-14 opacity-0 pointer-events-none"></div> <!-- Spacer for balance -->
+        </div>
+    </div>
+
+    <script>
+        // Variables
+        let timeLeft = 25 * 60;
+        let totalTime = 25 * 60;
+        let timerId = null;
+        let isRunning = false;
+
+        // Sound Generator (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let activeNodes = [];
+
+        function playBellSound() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+
+            // Handle overlapping sounds: Fade out previous active instances quickly
+            activeNodes.forEach(node => {
+                node.gain.gain.cancelScheduledValues(now);
+                node.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5); // Fast fade out
+                node.osc.stop(now + 0.6);
+            });
+            activeNodes = [];
+
+            // Zen Bell Configuration
+            const fundamental = 220; // 220Hz (A3)
+            const partials = [
+                { freq: fundamental, gain: 0.5, decay: 5 },
+                { freq: fundamental * 2, gain: 0.3, decay: 4 },
+                { freq: 523.25, gain: 0.2, decay: 3.5 },
+                { freq: 659.25, gain: 0.15, decay: 3 },
+                { freq: fundamental * 4, gain: 0.1, decay: 2.5 },
+                { freq: 1046.5, gain: 0.05, decay: 2 }
+            ];
+
+            // Log parameters for debugging/fine-tuning
+            console.log("--- Zen Bell Triggered ---");
+            console.log(`Base Frequency: ${fundamental}Hz`);
+            console.log(`Attack: 0.02s | Decay: ~5s`);
+            console.table(partials);
+
+            partials.forEach(p => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(p.freq, now);
+
+                // Envelope: Soft attack (0.02s) and long exponential decay
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(p.gain, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + p.decay);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + p.decay + 0.1);
+
+                activeNodes.push({ osc, gain });
+            });
+        }
+
+        // UI Selectors
+        const timerDisplay = document.getElementById('timer-display');
+        const statusLabel = document.getElementById('status-label');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const startIcon = document.getElementById('start-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const progressCircle = document.getElementById('progress-circle');
+        const customMinInput = document.getElementById('custom-min');
+
+        const radius = 48;
+        const circumference = 2 * Math.PI * radius;
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Update Circle
+            const offset = circumference - (timeLeft / totalTime) * circumference;
+            progressCircle.style.strokeDashoffset = isNaN(offset) ? circumference : offset;
+
+            // Page Title
+            document.title = `${timerDisplay.textContent} | Zen Focus`;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (timeLeft <= 0) return;
+
+            isRunning = true;
+            statusLabel.textContent = "Focusing";
+            startIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+            startBtn.classList.add('btn-active');
+
+            timerId = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    completeTimer();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            statusLabel.textContent = "Paused";
+            startIcon.classList.remove('hidden');
+            pauseIcon.classList.add('hidden');
+            startBtn.classList.remove('btn-active');
+            clearInterval(timerId);
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            statusLabel.textContent = "Ready";
+            timeLeft = totalTime;
+            updateDisplay();
+        }
+
+        function completeTimer() {
+            pauseTimer();
+            statusLabel.textContent = "Session Finished";
+            playBellSound();
+        }
+
+        function setTimer(minutes) {
+            pauseTimer();
+            totalTime = minutes * 60;
+            timeLeft = totalTime;
+            updateDisplay();
+            statusLabel.textContent = "Ready";
+        }
+
+        // Input handling
+        customMinInput.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            if (val > 0) {
+                setTimer(val);
+            }
+        });
+
+        // Initialize
+        startBtn.addEventListener('click', toggleTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        updateDisplay();
+
+    </script>
+</body>
+
+</html>
