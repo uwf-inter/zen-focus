@@ -2,6 +2,16 @@
 <html lang="en">
 
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-NRV9F9F3');</script>
+    <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zen Focus | Deep Dark & Minimal Timer</title>
@@ -59,12 +69,42 @@
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
+            appearance: none;
             margin: 0;
+        }
+
+        /* Volume Slider Customization */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #22C55E;
+            cursor: pointer;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
         }
     </style>
 </head>
 
 <body class="flex flex-col items-center justify-center min-h-screen">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NRV9F9F3" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
     <!-- Header / Branding -->
     <div class="fixed top-8 left-0 w-full text-center opacity-30 tracking-widest text-xs uppercase font-light">
@@ -136,6 +176,17 @@
 
             <div class="w-14 h-14 opacity-0 pointer-events-none"></div> <!-- Spacer for balance -->
         </div>
+
+        <!-- Volume Control -->
+        <div class="flex items-center space-x-3 opacity-40 hover:opacity-100 transition-opacity">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" class="w-24">
+        </div>
     </div>
 
     <script>
@@ -148,8 +199,9 @@
         // Sound Generator (Web Audio API)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let activeNodes = [];
+        let globalVolume = parseFloat(localStorage.getItem('zenFocusVolume')) || 0.5;
 
-        function playBellSound() {
+        function playBellSound(decayMultiplier = 1) {
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -167,19 +219,21 @@
             // Zen Bell Configuration
             const fundamental = 220; // 220Hz (A3)
             const partials = [
-                { freq: fundamental, gain: 0.5, decay: 5 },
-                { freq: fundamental * 2, gain: 0.3, decay: 4 },
-                { freq: 523.25, gain: 0.2, decay: 3.5 },
-                { freq: 659.25, gain: 0.15, decay: 3 },
-                { freq: fundamental * 4, gain: 0.1, decay: 2.5 },
-                { freq: 1046.5, gain: 0.05, decay: 2 }
+                { freq: fundamental, gain: 0.5 * globalVolume, decay: 5 * decayMultiplier },
+                { freq: fundamental * 2, gain: 0.3 * globalVolume, decay: 4 * decayMultiplier },
+                { freq: 523.25, gain: 0.2 * globalVolume, decay: 3.5 * decayMultiplier },
+                { freq: 659.25, gain: 0.15 * globalVolume, decay: 3 * decayMultiplier },
+                { freq: fundamental * 4, gain: 0.1 * globalVolume, decay: 2.5 * decayMultiplier },
+                { freq: 1046.5, gain: 0.05 * globalVolume, decay: 2 * decayMultiplier }
             ];
 
-            // Log parameters for debugging/fine-tuning
-            console.log("--- Zen Bell Triggered ---");
-            console.log(`Base Frequency: ${fundamental}Hz`);
-            console.log(`Attack: 0.02s | Decay: ~5s`);
-            console.table(partials);
+            // Log parameters for debugging/fine-tuning (only for full sound)
+            if (decayMultiplier >= 1) {
+                console.log("--- Zen Bell Triggered ---");
+                console.log(`Base Frequency: ${fundamental}Hz`);
+                console.log(`Attack: 0.02s | Decay: ~5s`);
+                console.table(partials);
+            }
 
             partials.forEach(p => {
                 const osc = audioCtx.createOscillator();
@@ -298,8 +352,21 @@
         // Initialize
         startBtn.addEventListener('click', toggleTimer);
         resetBtn.addEventListener('click', resetTimer);
-        updateDisplay();
 
+        // Volume logic
+        const volumeSlider = document.getElementById('volume-slider');
+        volumeSlider.value = globalVolume;
+        volumeSlider.addEventListener('input', (e) => {
+            globalVolume = parseFloat(e.target.value);
+            localStorage.setItem('zenFocusVolume', globalVolume);
+        });
+
+        // Audio feedback on release
+        volumeSlider.addEventListener('change', () => {
+            playBellSound(0.1); // Short preview sound
+        });
+
+        updateDisplay();
     </script>
 </body>
 
