@@ -178,6 +178,43 @@
             color: #22C55E;
         }
 
+        /* Single Task Input */
+        #task-input {
+            font-size: 1.2rem;
+            opacity: 0.4;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid transparent;
+            text-align: center;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 250px;
+            margin-bottom: 0.5rem;
+            color: white;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        #task-input:hover,
+        #task-input:focus {
+            opacity: 0.8;
+        }
+
+        #task-input:focus {
+            outline: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #task-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+            font-weight: 300;
+        }
+
+        #task-input[readonly] {
+            pointer-events: none;
+            border-bottom: 1px solid transparent;
+        }
+
         /* Settings Modal */
         #settings-modal {
             opacity: 0;
@@ -361,6 +398,7 @@
 
         <!-- Time Display -->
         <div class="flex flex-col items-center justify-center z-10 text-center">
+            <input type="text" id="task-input" placeholder="Focus on..." data-gtm-click="task_input" class="font-mono">
             <div class="relative flex items-center justify-center">
                 <div id="timer-display"
                     class="text-7xl sm:text-9xl font-mono font-light tracking-tighter glow transition-all duration-1000">
@@ -543,6 +581,7 @@
         const soundKnob = document.getElementById('sound-knob');
         const themeToggle = document.getElementById('theme-toggle');
         const themeKnob = document.getElementById('theme-knob');
+        const taskInput = document.getElementById('task-input');
 
         const radius = 48;
         const circumference = 2 * Math.PI * radius;
@@ -578,6 +617,7 @@
             pauseIcon.classList.remove('hidden');
             startBtn.classList.add('btn-active');
             startBtn.setAttribute('data-gtm-click', 'timer_pause');
+            taskInput.readOnly = true;
 
             timerId = setInterval(() => {
                 timeLeft--;
@@ -596,6 +636,7 @@
             pauseIcon.classList.add('hidden');
             startBtn.classList.remove('btn-active');
             startBtn.setAttribute('data-gtm-click', 'timer_start');
+            taskInput.readOnly = false;
             clearInterval(timerId);
         }
 
@@ -605,6 +646,7 @@
             timeLeft = totalTime;
             clearAnimations();
             updateDisplay();
+            taskInput.readOnly = false;
         }
 
         function completeTimer() {
@@ -752,6 +794,17 @@
         // Initialization
         updateSoundToggleUI();
         updateThemeUI();
+
+        // Task Input Logic
+        taskInput.value = localStorage.getItem('zenFocusTask') || '';
+        taskInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                localStorage.setItem('zenFocusTask', taskInput.value);
+                taskInput.blur();
+                window.dataLayer = window.dataLayer || [];
+                window.dataLayer.push({ 'event': 'task_set' });
+            }
+        });
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
