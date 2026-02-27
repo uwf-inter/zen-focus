@@ -333,17 +333,20 @@
         </div>
     </div>
 
-    <!-- Ghost Support Link (Corner) -->
-    <a href="https://buymeacoffee.com/gygy" target="_blank" rel="noopener noreferrer" data-gtm-click="bmc_click"
-        class="fixed bottom-6 right-16 ghost-link hidden sm:block">
-        Buy me a coffee
-    </a>
+    <!-- Corner Controls -->
+    <div class="fixed bottom-6 right-6 flex flex-col items-end space-y-4 z-50">
+        <!-- Ghost Support Link (Corner) -->
+        <a href="https://buymeacoffee.com/gygy" target="_blank" rel="noopener noreferrer" data-gtm-click="bmc_click"
+            class="ghost-link hidden sm:block">
+            Buy me a coffee
+        </a>
 
-    <!-- Test Sound Button (Existing, slightly shifted) -->
-    <button onclick="playBellSound()"
-        class="fixed bottom-6 right-6 text-[10px] uppercase tracking-[0.2em] text-white/10 hover:text-[#22C55E] transition-colors z-50">
-        Test Sound
-    </button>
+        <!-- Test Sound Button -->
+        <button onclick="playBellSound()"
+            class="text-[10px] uppercase tracking-[0.2em] text-white/10 hover:text-[#22C55E] transition-colors">
+            Test Sound
+        </button>
+    </div>
 
     <!-- Main Timer Area -->
     <div class="relative flex items-center justify-center w-[300px] h-[300px] sm:w-[450px] sm:h-[450px]">
