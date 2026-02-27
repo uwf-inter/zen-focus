@@ -155,6 +155,65 @@
             transition: background-color 3s ease;
         }
 
+        #support-link {
+            opacity: 0;
+            transform: translateY(10px);
+            font-size: 12px;
+            margin-top: 2rem;
+            color: rgba(248, 250, 252, 0.4);
+            text-decoration: none;
+            letter-spacing: 0.05em;
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        #support-link.link-visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            pointer-events: auto;
+            transition-delay: 1.5s;
+        }
+
+        #support-link:hover {
+            color: #22C55E;
+        }
+
+        /* Settings Modal */
+        #settings-modal {
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        #settings-modal.modal-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .settings-content {
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        #settings-modal.modal-open .settings-content {
+            transform: translateY(0);
+        }
+
+        /* Ghost Link */
+        .ghost-link {
+            opacity: 0.2;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .ghost-link:hover {
+            opacity: 1;
+            color: #22C55E;
+        }
+
         /* Minimal Tooltips (Desktop Only) */
         @media (hover: hover) {
             [data-tooltip] {
@@ -202,9 +261,87 @@
         Zen Focus Mode
     </div>
 
-    <!-- Test Sound Button (Fixed corner for ease of access) -->
+    <!-- Settings Toggle -->
+    <button id="settings-toggle" data-tooltip="Settings"
+        class="fixed bottom-6 left-6 w-10 h-10 glass rounded-full flex items-center justify-center text-white/20 hover:text-white/60 hover:border-white/20 transition-all z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path
+                d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
+            </path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+    </button>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal"
+        class="fixed inset-0 flex items-center justify-center bg-[#050505]/80 backdrop-blur-sm p-6">
+        <div class="settings-content glass max-w-sm w-full p-8 rounded-3xl relative">
+            <button id="close-settings"
+                class="absolute top-6 right-6 text-white/20 hover:text-white/60 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h2 class="text-lg font-light tracking-[0.2em] uppercase mb-8 text-white/60">Settings</h2>
+
+            <!-- Volume Control -->
+            <div class="space-y-4 mb-8">
+                <div class="flex justify-between items-center text-xs tracking-widest text-white/40 uppercase">
+                    <span>Bell Volume</span>
+                    <span id="volume-value">50%</span>
+                </div>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" class="w-full">
+            </div>
+
+            <!-- Toggles -->
+            <div class="space-y-6 mb-10">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs tracking-widest text-white/40 uppercase">Mute Audio</span>
+                    <button id="sound-toggle" data-gtm-click="toggle_sound"
+                        class="w-10 h-5 glass rounded-full relative transition-colors duration-300">
+                        <div id="sound-knob"
+                            class="absolute top-1 left-1 w-3 h-3 bg-white/20 rounded-full transition-all duration-300">
+                        </div>
+                    </button>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs tracking-widest text-white/40 uppercase">Pure Black Theme</span>
+                    <button id="theme-toggle" data-gtm-click="toggle_darkmode"
+                        class="w-10 h-5 glass rounded-full relative transition-colors duration-300">
+                        <div id="theme-knob"
+                            class="absolute top-1 left-1 w-3 h-3 bg-white/20 rounded-full transition-all duration-300">
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- BMC Link (Permanent) -->
+            <div class="pt-8 border-t border-white/5 text-center">
+                <a href="https://buymeacoffee.com/gygy" target="_blank" rel="noopener noreferrer"
+                    data-gtm-click="bmc_click"
+                    class="text-[12px] tracking-widest text-white/30 hover:text-[#22C55E] transition-all">
+                    Enjoying ZenFocus?<br>
+                    <span class="mt-2 inline-block border-b border-transparent hover:border-[#22C55E]/40 pb-0.5">Support
+                        the
+                        creator ☕</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ghost Support Link (Corner) -->
+    <a href="https://buymeacoffee.com/gygy" target="_blank" rel="noopener noreferrer" data-gtm-click="bmc_click"
+        class="fixed bottom-6 right-16 ghost-link hidden sm:block">
+        Buy me a coffee
+    </a>
+
+    <!-- Test Sound Button (Existing, slightly shifted) -->
     <button onclick="playBellSound()"
-        class="fixed bottom-4 right-4 text-[10px] uppercase tracking-[0.2em] text-white/20 hover:text-[#22C55E] transition-colors border border-white/5 px-3 py-1 rounded z-50">
+        class="fixed bottom-6 right-6 text-[10px] uppercase tracking-[0.2em] text-white/10 hover:text-[#22C55E] transition-colors z-50">
         Test Sound
     </button>
 
@@ -230,6 +367,10 @@
                     class="absolute text-xl sm:text-2xl font-light text-[#22C55E]/80 pointer-events-none">
                     <!-- Message inserted via JS -->
                 </div>
+                <a id="support-link" href="https://buymeacoffee.com/gygy" target="_blank" rel="noopener noreferrer"
+                    data-gtm-click="bmc_click" class="absolute top-[130%] whitespace-nowrap">
+                    Enjoyed your focus? [Support the creator ☕]
+                </a>
             </div>
             <div id="status-label"
                 class="text-xs uppercase tracking-[0.4em] mt-2 text-white/40 font-light translate-z-0">
@@ -243,14 +384,17 @@
 
         <!-- Preset Controls -->
         <div class="glass px-6 py-4 rounded-full flex space-x-6 text-sm font-light">
-            <button onclick="setTimer(25)" class="preset-btn hover:text-[#22C55E] transition-colors">25m</button>
+            <button onclick="setTimer(25)" data-gtm-click="set_duration"
+                class="preset-btn hover:text-[#22C55E] transition-colors">25m</button>
             <span class="text-white/10">|</span>
-            <button onclick="setTimer(15)" class="preset-btn hover:text-[#22C55E] transition-colors">15m</button>
+            <button onclick="setTimer(15)" data-gtm-click="set_duration"
+                class="preset-btn hover:text-[#22C55E] transition-colors">15m</button>
             <span class="text-white/10">|</span>
-            <button onclick="setTimer(5)" class="preset-btn hover:text-[#22C55E] transition-colors">5m</button>
+            <button onclick="setTimer(5)" data-gtm-click="set_duration"
+                class="preset-btn hover:text-[#22C55E] transition-colors">5m</button>
             <span class="text-white/10">|</span>
             <div class="flex items-center space-x-1">
-                <input type="number" id="custom-min" min="1" max="999" placeholder="..."
+                <input type="number" id="custom-min" min="1" max="999" placeholder="..." data-gtm-click="set_duration"
                     class="bg-transparent w-8 text-center focus:outline-none border-b border-white/10 focus:border-[#22C55E] transition-colors">
                 <span class="text-white/40">m</span>
             </div>
@@ -258,7 +402,7 @@
 
         <!-- Main Actions -->
         <div class="flex items-center space-x-8">
-            <button id="reset-btn" data-tooltip="Reset (R)"
+            <button id="reset-btn" data-tooltip="Reset (R)" data-gtm-click="timer_reset"
                 class="glass w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors border border-white/10">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 opacity-60" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -267,7 +411,7 @@
                 </svg>
             </button>
 
-            <button id="start-btn" data-tooltip="Start / Pause (Space)"
+            <button id="start-btn" data-tooltip="Start / Pause (Space)" data-gtm-click="timer_start"
                 class="w-24 h-24 rounded-full bg-white text-[#050505] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                 <span id="start-icon" class="font-bold tracking-tight">START</span>
                 <span id="pause-icon" class="hidden font-bold tracking-tight">PAUSE</span>
@@ -387,6 +531,15 @@
         const pauseIcon = document.getElementById('pause-icon');
         const progressCircle = document.getElementById('progress-circle');
         const customMinInput = document.getElementById('custom-min');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const closeSettings = document.getElementById('close-settings');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeValue = document.getElementById('volume-value');
+        const soundToggle = document.getElementById('sound-toggle');
+        const soundKnob = document.getElementById('sound-knob');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeKnob = document.getElementById('theme-knob');
 
         const radius = 48;
         const circumference = 2 * Math.PI * radius;
@@ -421,6 +574,7 @@
             startIcon.classList.add('hidden');
             pauseIcon.classList.remove('hidden');
             startBtn.classList.add('btn-active');
+            startBtn.setAttribute('data-gtm-click', 'timer_pause');
 
             timerId = setInterval(() => {
                 timeLeft--;
@@ -438,6 +592,7 @@
             startIcon.classList.remove('hidden');
             pauseIcon.classList.add('hidden');
             startBtn.classList.remove('btn-active');
+            startBtn.setAttribute('data-gtm-click', 'timer_start');
             clearInterval(timerId);
         }
 
@@ -454,6 +609,14 @@
             statusLabel.textContent = "Session Finished";
             playBellSound();
 
+            // GTM Tracking
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                'event': 'timer_complete',
+                'focus_type': 'standard',
+                'completed_at': new Date().toISOString()
+            });
+
             // Trigger Animation after 1s
             setTimeout(() => {
                 const messages = [
@@ -462,10 +625,12 @@
                 ];
                 const msgElement = document.getElementById('completion-message');
                 const displayElement = document.getElementById('timer-display');
+                const supportLink = document.getElementById('support-link');
 
                 msgElement.textContent = messages[Math.floor(Math.random() * messages.length)];
                 displayElement.classList.add('timer-fade-out');
                 msgElement.classList.add('message-fade-in');
+                supportLink.classList.add('link-visible');
                 document.body.classList.add('ripple-bg');
             }, 1000);
         }
@@ -473,8 +638,10 @@
         function clearAnimations() {
             const msgElement = document.getElementById('completion-message');
             const displayElement = document.getElementById('timer-display');
+            const supportLink = document.getElementById('support-link');
             displayElement.classList.remove('timer-fade-out');
             msgElement.classList.remove('message-fade-in');
+            supportLink.classList.remove('link-visible');
             document.body.classList.remove('ripple-bg');
             statusLabel.classList.remove('opacity-0');
         }
@@ -500,18 +667,88 @@
         startBtn.addEventListener('click', toggleTimer);
         resetBtn.addEventListener('click', resetTimer);
 
+        // Settings Modal Logic
+        function openModal() {
+            settingsModal.classList.add('modal-open');
+        }
+
+        function closeModal() {
+            settingsModal.classList.remove('modal-open');
+        }
+
+        settingsToggle.addEventListener('click', openModal);
+        closeSettings.addEventListener('click', closeModal);
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeModal();
+        });
+
         // Volume logic
-        const volumeSlider = document.getElementById('volume-slider');
         volumeSlider.value = globalVolume;
+        volumeValue.textContent = `${Math.round(globalVolume * 100)}%`;
+
         volumeSlider.addEventListener('input', (e) => {
             globalVolume = parseFloat(e.target.value);
+            volumeValue.textContent = `${Math.round(globalVolume * 100)}%`;
             localStorage.setItem('zenFocusVolume', globalVolume);
+            updateSoundToggleUI();
         });
 
         // Audio feedback on release
         volumeSlider.addEventListener('change', () => {
             playBellSound(0.1); // Short preview sound
         });
+
+        // Sound Toggle
+        function updateSoundToggleUI() {
+            if (globalVolume > 0) {
+                soundToggle.classList.add('bg-[#22C55E]');
+                soundKnob.style.transform = 'translateX(20px)';
+                soundKnob.style.backgroundColor = '#050505';
+            } else {
+                soundToggle.classList.remove('bg-[#22C55E]');
+                soundKnob.style.transform = 'translateX(0)';
+                soundKnob.style.backgroundColor = 'rgba(255,255,255,0.2)';
+            }
+        }
+
+        soundToggle.addEventListener('click', () => {
+            if (globalVolume > 0) {
+                localStorage.setItem('lastVolume', globalVolume);
+                globalVolume = 0;
+            } else {
+                globalVolume = parseFloat(localStorage.getItem('lastVolume')) || 0.5;
+            }
+            volumeSlider.value = globalVolume;
+            volumeValue.textContent = `${Math.round(globalVolume * 100)}%`;
+            localStorage.setItem('zenFocusVolume', globalVolume);
+            updateSoundToggleUI();
+        });
+
+        // Theme Toggle (Pure Black)
+        let isPureBlack = localStorage.getItem('zenPureBlack') === 'true';
+        function updateThemeUI() {
+            if (isPureBlack) {
+                document.body.style.backgroundColor = '#000000';
+                themeToggle.classList.add('bg-[#22C55E]');
+                themeKnob.style.transform = 'translateX(20px)';
+                themeKnob.style.backgroundColor = '#050505';
+            } else {
+                document.body.style.backgroundColor = '#050505';
+                themeToggle.classList.remove('bg-[#22C55E]');
+                themeKnob.style.transform = 'translateX(0)';
+                themeKnob.style.backgroundColor = 'rgba(255,255,255,0.2)';
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            isPureBlack = !isPureBlack;
+            localStorage.setItem('zenPureBlack', isPureBlack);
+            updateThemeUI();
+        });
+
+        // Initialization
+        updateSoundToggleUI();
+        updateThemeUI();
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
@@ -542,7 +779,7 @@
                     localStorage.setItem('zenFocusVolume', globalVolume);
                     break;
                 case 'Escape':
-                    // Potential modal close logic here
+                    closeModal();
                     break;
             }
         });
