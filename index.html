@@ -120,6 +120,74 @@
             margin-top: -5px;
             box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
         }
+
+        /* Keyboard Shortcut Feedback */
+        .shortcut-active {
+            transform: scale(0.95);
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.6) !important;
+        }
+
+        /* Completion Animations */
+        .timer-fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .message-fade-in {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+        }
+
+        #completion-message {
+            opacity: 0;
+            transform: translateY(10px);
+            letter-spacing: 0.2em;
+            text-align: center;
+            max-width: 280px;
+            line-height: 1.6;
+        }
+
+        .ripple-bg {
+            background-color: #0A100A !important;
+            transition: background-color 3s ease;
+        }
+
+        /* Minimal Tooltips (Desktop Only) */
+        @media (hover: hover) {
+            [data-tooltip] {
+                position: relative;
+            }
+
+            [data-tooltip]::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: calc(100% + 10px);
+                left: 50%;
+                transform: translateX(-50%) translateY(10px);
+                background: #050505;
+                color: #22C55E;
+                border: 1px solid rgba(34, 197, 94, 0.3);
+                padding: 4px 8px;
+                font-size: 10px;
+                font-family: 'JetBrains Mono', monospace;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 4px;
+                z-index: 100;
+            }
+
+            [data-tooltip]:hover::after {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -152,11 +220,19 @@
         </svg>
 
         <!-- Time Display -->
-        <div class="flex flex-col items-center justify-center z-10">
-            <div id="timer-display" class="text-7xl sm:text-9xl font-mono font-light tracking-tighter glow">
-                25:00
+        <div class="flex flex-col items-center justify-center z-10 text-center">
+            <div class="relative flex items-center justify-center">
+                <div id="timer-display"
+                    class="text-7xl sm:text-9xl font-mono font-light tracking-tighter glow transition-all duration-1000">
+                    25:00
+                </div>
+                <div id="completion-message"
+                    class="absolute text-xl sm:text-2xl font-light text-[#22C55E]/80 pointer-events-none">
+                    <!-- Message inserted via JS -->
+                </div>
             </div>
-            <div id="status-label" class="text-xs uppercase tracking-[0.4em] mt-2 text-white/40 font-light">
+            <div id="status-label"
+                class="text-xs uppercase tracking-[0.4em] mt-2 text-white/40 font-light translate-z-0">
                 Ready
             </div>
         </div>
@@ -182,7 +258,7 @@
 
         <!-- Main Actions -->
         <div class="flex items-center space-x-8">
-            <button id="reset-btn"
+            <button id="reset-btn" data-tooltip="Reset (R)"
                 class="glass w-14 h-14 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors border border-white/10">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 opacity-60" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -191,7 +267,7 @@
                 </svg>
             </button>
 
-            <button id="start-btn"
+            <button id="start-btn" data-tooltip="Start / Pause (Space)"
                 class="w-24 h-24 rounded-full bg-white text-[#050505] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                 <span id="start-icon" class="font-bold tracking-tight">START</span>
                 <span id="pause-icon" class="hidden font-bold tracking-tight">PAUSE</span>
@@ -201,7 +277,8 @@
         </div>
 
         <!-- Volume Control -->
-        <div class="flex items-center space-x-3 opacity-40 hover:opacity-100 transition-opacity">
+        <div class="flex items-center space-x-3 opacity-40 hover:opacity-100 transition-opacity"
+            data-tooltip="Mute (M)">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -241,8 +318,9 @@
 
             // Zen Bell Configuration
             const fundamental = 220; // 220Hz (A3)
+            const maxDecay = 5 * decayMultiplier;
             const partials = [
-                { freq: fundamental, gain: 0.5 * globalVolume, decay: 5 * decayMultiplier },
+                { freq: fundamental, gain: 0.5 * globalVolume, decay: maxDecay },
                 { freq: fundamental * 2, gain: 0.3 * globalVolume, decay: 4 * decayMultiplier },
                 { freq: 523.25, gain: 0.2 * globalVolume, decay: 3.5 * decayMultiplier },
                 { freq: 659.25, gain: 0.15 * globalVolume, decay: 3 * decayMultiplier },
@@ -250,11 +328,19 @@
                 { freq: 1046.5, gain: 0.05 * globalVolume, decay: 2 * decayMultiplier }
             ];
 
+            // Master Gain for collective fade-out and safety
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(audioCtx.destination);
+            masterGain.gain.setValueAtTime(1, now);
+            // Secondary fade-out on master to ensure absolute silence
+            masterGain.gain.exponentialRampToValueAtTime(0.0001, now + maxDecay);
+            masterGain.gain.linearRampToValueAtTime(0, now + maxDecay + 0.1);
+
             // Log parameters for debugging/fine-tuning (only for full sound)
             if (decayMultiplier >= 1) {
                 console.log("--- Zen Bell Triggered ---");
                 console.log(`Base Frequency: ${fundamental}Hz`);
-                console.log(`Attack: 0.02s | Decay: ~5s`);
+                console.log(`Attack: 0.02s | Max Decay: ${maxDecay}s`);
                 console.table(partials);
             }
 
@@ -269,12 +355,24 @@
                 gain.gain.setValueAtTime(0, now);
                 gain.gain.linearRampToValueAtTime(p.gain, now + 0.02);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + p.decay);
+                gain.gain.setValueAtTime(0, now + p.decay + 0.05);
 
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                gain.connect(masterGain); // Connect to master instead of destination
 
                 osc.start(now);
-                osc.stop(now + p.decay + 0.1);
+                const stopTime = now + p.decay + 0.1;
+                osc.stop(stopTime);
+
+                // Explicit cleanup: Disconnect nodes when done playing
+                osc.onended = () => {
+                    osc.disconnect();
+                    gain.disconnect();
+                    // Disconnect master gain only once when the longest partial finishes
+                    if (p.decay === maxDecay) {
+                        masterGain.disconnect();
+                    }
+                };
 
                 activeNodes.push({ osc, gain });
             });
@@ -347,6 +445,7 @@
             pauseTimer();
             statusLabel.textContent = "Ready";
             timeLeft = totalTime;
+            clearAnimations();
             updateDisplay();
         }
 
@@ -354,12 +453,37 @@
             pauseTimer();
             statusLabel.textContent = "Session Finished";
             playBellSound();
+
+            // Trigger Animation after 1s
+            setTimeout(() => {
+                const messages = [
+                    "Well done. Time to breathe.",
+                    "Focus complete. Rest your mind."
+                ];
+                const msgElement = document.getElementById('completion-message');
+                const displayElement = document.getElementById('timer-display');
+
+                msgElement.textContent = messages[Math.floor(Math.random() * messages.length)];
+                displayElement.classList.add('timer-fade-out');
+                msgElement.classList.add('message-fade-in');
+                document.body.classList.add('ripple-bg');
+            }, 1000);
+        }
+
+        function clearAnimations() {
+            const msgElement = document.getElementById('completion-message');
+            const displayElement = document.getElementById('timer-display');
+            displayElement.classList.remove('timer-fade-out');
+            msgElement.classList.remove('message-fade-in');
+            document.body.classList.remove('ripple-bg');
+            statusLabel.classList.remove('opacity-0');
         }
 
         function setTimer(minutes) {
             pauseTimer();
             totalTime = minutes * 60;
             timeLeft = totalTime;
+            clearAnimations();
             updateDisplay();
             statusLabel.textContent = "Ready";
         }
@@ -388,6 +512,45 @@
         volumeSlider.addEventListener('change', () => {
             playBellSound(0.1); // Short preview sound
         });
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Disable shortcuts if user is typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch (e.key) {
+                case ' ': // Space
+                    e.preventDefault();
+                    toggleTimer();
+                    triggerButtonFeedback(startBtn);
+                    break;
+                case 'r':
+                case 'R':
+                    resetTimer();
+                    triggerButtonFeedback(resetBtn);
+                    break;
+                case 'm':
+                case 'M':
+                    // Mute / Unmute (Toggle volume between 0 and last known volume)
+                    if (globalVolume > 0) {
+                        localStorage.setItem('lastVolume', globalVolume);
+                        globalVolume = 0;
+                    } else {
+                        globalVolume = parseFloat(localStorage.getItem('lastVolume')) || 0.5;
+                    }
+                    volumeSlider.value = globalVolume;
+                    localStorage.setItem('zenFocusVolume', globalVolume);
+                    break;
+                case 'Escape':
+                    // Potential modal close logic here
+                    break;
+            }
+        });
+
+        function triggerButtonFeedback(btn) {
+            btn.classList.add('shortcut-active');
+            setTimeout(() => btn.classList.remove('shortcut-active'), 150);
+        }
 
         updateDisplay();
     </script>
